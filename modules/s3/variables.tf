@@ -22,3 +22,11 @@ variable "iam_user_name" {
   description = "The IAM user name to grant access to the S3 bucket."
   type        = string
 }
+
+# variable "objects" {
+#   description = "A list of objects to upload to the S3 bucket. Each object should have keys 'key' and 'source'."
+#   type        = list(object({
+#     key    = string
+#     source = string
+#   }))
+# }

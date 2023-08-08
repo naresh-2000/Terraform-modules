@@ -48,3 +48,13 @@ resource "aws_s3_bucket_policy" "bucket_policy" {
 }
 
 data "aws_caller_identity" "current" {}
+
+# Upload object to above s3 bucket 
+
+# resource "aws_s3_bucket_object" "example_objects" {
+#   for_each = { for obj in var.objects : obj.key => obj }
+
+#   bucket = aws_s3_bucket.bucket.id
+#   key    = each.value.key
+#   source = each.value.source
+# }

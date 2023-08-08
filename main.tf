@@ -190,15 +190,62 @@ module "elastic_ip" {
 }
 
 ###################################################################
-##################   CREATE S3 BUCKET   ###########################
+##################   CREATE s3 bucket   ###########################
 ###################################################################
 
 # Create s3 bucket 
 module "s3_bucket" {
   source = "./modules/s3"
 
-  bucket_name  = "test-bucket"
+  bucket_name  = "com.grid.test"
   region       = "us-east-1"
   tags         = { "Environment" = "test", "Project" = "MyProject" }
   iam_user_name = "grid-user" # can try with ARN - 
+
+  # objects = [
+  #   {
+  #     key    = "layers/imagemagick.zip"
+  #     source = "./lambda-code-stuffs/imagemagick.zip"
+  #   },
+  #   {
+  #     key    = "layers/node10-gm.zip"
+  #     source = "./lambda-code-stuffs/nodejs10-gm.zip"
+  #   },
+  #   {
+  #     key    = "SuuchiGRID_ImageProcessing_AiConversion.zip"
+  #     source = "./lambda-code-stuffs/SuuchiGRID_ImageProcessing_AiConversion.zip"
+  #   },
+  # ]
+}
+
+###################################################################
+##################   CREATE Lambda function  ######################
+###################################################################
+
+module "lambda_layer_imagemagick" {
+  source                 = "./modules/lambda-layers"
+  region                 = "us-east-1"  # Set your desired AWS region (same as the provider)
+  layer_name             = "imagemagick"
+  layer_description      = "My Lambda Layer1 description"
+#  compatible_runtimes    = ["node.js 14.x"]
+  layer_zip_file         = "../../lambda-layers-stuff/imagemagick.zip"  # Replace with the path to your Lambda layer code ZIP file
+}
+
+module "lambda_layer_nodejs10" {
+  source                 = "./modules/lambda-layers"
+  region                 = "us-east-1"  # Set your desired AWS region (same as the provider)
+  layer_name             = "nodejs10-gm"
+  layer_description      = "My Lambda Layer2 description"
+#  compatible_runtimes    = ["node.js 14.x"]
+  layer_zip_file         = ".././lambda-layers-stuff/nodejs10-gm.zip"  # Replace with the path to your Lambda layer code ZIP file
+}
+
+module "lambda_function" {
+  source            = "./modules/lambda-function"
+  region            = "us-east-1"  # Set your desired AWS region
+  function_name     = "Resize-image"
+  handler           = "index.handler"  # Replace with the correct handler for your Lambda function
+  runtime           = "nodejs14.x"  # Replace with the desired runtime for your Lambda function
+  s3_trigger_arn    = module.s3_bucket.bucket_arn # or pass the arn of bucket - like s3://com.grid.production
+  layers            = [module.lambda_layer_imagemagick.lambda_layer_arn, module.lambda_layer_nodejs10.lambda_layer_arn, "arn:aws:lambda:us-east-1:764866452798:layer:ghostscript:8"]  # Replace with the ARNs of any Lambda layers you want to attach
 }
